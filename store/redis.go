@@ -22,7 +22,7 @@ func NewRedis(pool *redis.Pool) *Redis {
 }
 
 // Set store bucket to redis
-func (r *Redis) Set(key string, b *bucket.Bucket) error {
+func (r *Redis) Set(key string, b bucket.Bucket) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 

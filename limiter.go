@@ -83,7 +83,7 @@ func (l *Limiter) Handler(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			err = l.Store.Set(requestKey, bucket)
+			err = l.Store.Set(requestKey, *bucket)
 			if err != nil {
 				resp.ErrorCode = int(errors.ErrStoreSet)
 				resp.ErrorMessage = errors.ErrStoreSet.String()
@@ -94,7 +94,7 @@ func (l *Limiter) Handler(next http.HandlerFunc) http.HandlerFunc {
 
 		}
 
-		bucket := &bucket.Bucket{
+		bucket := bucket.Bucket{
 			AllowDelay: l.allowDelay,
 			Timestamp:  now.Unix(),
 			Rate:       l.rate,

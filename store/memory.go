@@ -10,18 +10,18 @@ import (
 // Memory memory store bucket
 type Memory struct {
 	mutex  *sync.Mutex
-	memory map[string]*bucket.Bucket
+	memory map[string]bucket.Bucket
 }
 
 var _ Store = &Memory{}
 
 // NewMemory create memory store
-func NewMemory(memory map[string]*bucket.Bucket) *Memory {
+func NewMemory(memory map[string]bucket.Bucket) *Memory {
 	return &Memory{memory: memory, mutex: new(sync.Mutex)}
 }
 
 // Set store bucket to memory
-func (r *Memory) Set(key string, b *bucket.Bucket) error {
+func (r *Memory) Set(key string, b bucket.Bucket) error {
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -40,7 +40,7 @@ func (r *Memory) Get(key string) (*bucket.Bucket, error) {
 		return nil, errors.ErrNoExist
 	}
 
-	return b, nil
+	return &b, nil
 }
 
 // Exist key exit in memory
