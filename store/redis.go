@@ -4,6 +4,7 @@ import (
 	"sync"
 
 	"github.com/wychl/limiter/bucket"
+	"github.com/wychl/limiter/errors"
 
 	"github.com/garyburd/redigo/redis"
 )
@@ -18,11 +19,28 @@ var _ Store = &Redis{}
 
 // NewRedis create redis store
 func NewRedis(pool *redis.Pool) *Redis {
+	conn := pool.Get()
+	defer conn.Close()
+
+	// Test the connection
+	_, err := conn.Do("PING")
+	if err != nil {
+		panic(err)
+	}
+
 	return &Redis{pool: pool, mutex: new(sync.Mutex)}
 }
 
 // Set store bucket to redis
-func (r *Redis) Set(key string, b bucket.Bucket) error {
+func (r *Redis) Set(key string, b *bucket.Bucket) error {
+	if key == "" {
+		return errors.ErrKeyIsNull
+	}
+
+	if b == nil {
+		return errors.ErrInvalidBucket
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -58,6 +76,10 @@ func (r *Redis) Set(key string, b bucket.Bucket) error {
 
 // Get get bucket from redis
 func (r *Redis) Get(key string) (*bucket.Bucket, error) {
+	if key == "" {
+		return nil, errors.ErrKeyIsNull
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -89,6 +111,10 @@ func (r *Redis) Get(key string) (*bucket.Bucket, error) {
 
 // Exist key exit in redis
 func (r *Redis) Exist(key string) (bool, error) {
+	if key == "" {
+		return false, errors.ErrKeyIsNull
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 

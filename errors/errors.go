@@ -14,6 +14,8 @@ const (
 	ErrToManyRequest
 	// ErrNoExist key not in store
 	ErrNoExist
+	//ErrInvalidBucket bucket invalid
+	ErrInvalidBucket
 )
 
 var limiterErrorMessage = map[LimiterErr]string{
@@ -22,6 +24,7 @@ var limiterErrorMessage = map[LimiterErr]string{
 	ErrToManyRequest: "too many request",
 	ErrStoreSet:      "store set error",
 	ErrNoExist:       "key not exist",
+	ErrInvalidBucket: "bucket is invalid",
 }
 
 // String return string

@@ -21,17 +21,27 @@ type Limiter struct {
 	rate       float64
 	allowDelay bool
 	key        func(req *http.Request) string
-	Store      store.Store
+	store      store.Store
 }
 
 // New return limiter
 func New(rate float64) *Limiter {
-	return &Limiter{rate: rate, allowDelay: false, key: defaultGetKey}
+	return &Limiter{
+		rate:       rate,
+		allowDelay: false,
+		key:        defaultGetKey,
+		store:      store.NewMemory(make(map[string]bucket.Bucket)),
+	}
 }
 
 // NewLimiterWithoption  return limiter
 func NewLimiterWithoption(rate float64, options ...Option) *Limiter {
-	l := &Limiter{rate: rate, allowDelay: false}
+	l := &Limiter{
+		rate:       rate,
+		allowDelay: false,
+		key:        defaultGetKey,
+		store:      store.NewMemory(make(map[string]bucket.Bucket)),
+	}
 	for _, option := range options {
 		option(l)
 	}
@@ -55,7 +65,7 @@ func (l *Limiter) Handler(next http.HandlerFunc) http.HandlerFunc {
 			return
 		}
 
-		exist, err := l.Store.Exist(requestKey)
+		exist, err := l.store.Exist(requestKey)
 		if err != nil {
 			resp.ErrorCode = int(errors.ErrStoreRead)
 			resp.ErrorMessage = errors.ErrStoreRead.String()
@@ -65,7 +75,7 @@ func (l *Limiter) Handler(next http.HandlerFunc) http.HandlerFunc {
 		}
 
 		if exist {
-			bucket, err := l.Store.Get(requestKey)
+			bucket, err := l.store.Get(requestKey)
 			if err != nil {
 				resp.ErrorCode = int(errors.ErrStoreRead)
 				resp.ErrorMessage = errors.ErrStoreRead.String()
@@ -83,7 +93,7 @@ func (l *Limiter) Handler(next http.HandlerFunc) http.HandlerFunc {
 				return
 			}
 
-			err = l.Store.Set(requestKey, *bucket)
+			err = l.store.Set(requestKey, bucket)
 			if err != nil {
 				resp.ErrorCode = int(errors.ErrStoreSet)
 				resp.ErrorMessage = errors.ErrStoreSet.String()
@@ -99,7 +109,7 @@ func (l *Limiter) Handler(next http.HandlerFunc) http.HandlerFunc {
 			Timestamp:  now.Unix(),
 			Rate:       l.rate,
 		}
-		err = l.Store.Set(requestKey, bucket)
+		err = l.store.Set(requestKey, &bucket)
 		if err != nil {
 			resp.ErrorCode = int(errors.ErrStoreSet)
 			resp.ErrorMessage = errors.ErrStoreSet.String()

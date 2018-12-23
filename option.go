@@ -3,6 +3,8 @@ package limiter
 import (
 	"net/http"
 
+	"github.com/wychl/limiter/store"
+
 	"github.com/rs/xid"
 )
 
@@ -33,6 +35,14 @@ func KeyOption(key Key) Option {
 func AllowDelayOption(allowDelay bool) Option {
 	return func(l *Limiter) *Limiter {
 		l.allowDelay = allowDelay
+		return l
+	}
+}
+
+// StoreOption define limiter store
+func StoreOption(s store.Store) Option {
+	return func(l *Limiter) *Limiter {
+		l.store = s
 		return l
 	}
 }

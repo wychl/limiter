@@ -17,21 +17,37 @@ var _ Store = &Memory{}
 
 // NewMemory create memory store
 func NewMemory(memory map[string]bucket.Bucket) *Memory {
+	if memory == nil {
+		memory = make(map[string]bucket.Bucket)
+	}
+
 	return &Memory{memory: memory, mutex: new(sync.Mutex)}
 }
 
 // Set store bucket to memory
-func (r *Memory) Set(key string, b bucket.Bucket) error {
+func (r *Memory) Set(key string, b *bucket.Bucket) error {
+	if key == "" {
+		return errors.ErrKeyIsNull
+	}
+
+	if b == nil {
+		return errors.ErrInvalidBucket
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
-	r.memory[key] = b
+	r.memory[key] = *b
 
 	return nil
 }
 
 // Get get bucket from memory
 func (r *Memory) Get(key string) (*bucket.Bucket, error) {
+	if key == "" {
+		return nil, errors.ErrKeyIsNull
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 
@@ -45,6 +61,10 @@ func (r *Memory) Get(key string) (*bucket.Bucket, error) {
 
 // Exist key exit in memory
 func (r *Memory) Exist(key string) (bool, error) {
+	if key == "" {
+		return false, errors.ErrKeyIsNull
+	}
+
 	r.mutex.Lock()
 	defer r.mutex.Unlock()
 	_, exist := r.memory[key]
